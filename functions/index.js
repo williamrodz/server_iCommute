@@ -3,18 +3,14 @@ const functions = require('firebase-functions');
 // const serviceAccount = require('./icommute-firebase-firebase-adminsdk-k6k3e-ede02571bf.json')
 const apiKeys = require('./apiKeys.json');
 const fetch = require('node-fetch');
-// The Firebase Admin SDK to access the Firebase Realtime Database.
-const admin = require('firebase-admin');
-// admin.initializeApp();
-// admin.initializeApp({
-//   credential: admin.credential.cert(serviceAccount),
-//   databaseURL: 'https://icommute-firebase.firebaseio.com/'
-// });
 
+var admin = require("firebase-admin");
+var serviceAccount = require("./icommute-firebase-firebase-adminsdk-g9u8z-a0323162ae.json");
 
 admin.initializeApp({
-   credential: admin.credential.applicationDefault()
- });
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://icommute-firebase.firebaseio.com"
+});
 
 
 const DISTANCES_API_URL = 'https://maps.googleapis.com/maps/api/distancematrix/json?'
@@ -81,10 +77,10 @@ exports.updateCommutes = functions.https.onRequest((request, response) => {
   const ref = admin.database().ref('/users/test_user/commutes');
 
   ref.once('value').then((snapshot)=>{
-    response.send(snapshot);
+    return response.send(snapshot);
   })
   .catch((error)=>{
-    response.send("error@: "+error)
+    return response.send("error@: "+error)
   })
 
 });
@@ -106,20 +102,20 @@ exports.getDistance = functions.https.onRequest((req, res) => {
   fetch(requestUrl)
   .then(response => response.json())
   .then(data => {
-    return res.json(data);
+    const status = data.status
+    if (status == "OK"){
+      const rows = data.rows;
+      const elements = rows[0].elements;
+      const firstElement = elements[0];
+      const distanceText = firstElement.distance.text;
+      const durationText = firstElement.duration.text;
 
-    // const firstElement = object["rows"][0]["elements"][0];
-    // const status = firstElement["status"];
-    // if (status === "OK"){
-    //   const distanceText = firstElement["distance"]["text"];
-    //   const distanceValue = firstElement["distance"]["value"];
-    //   const durationText = firstElement["duration"]["text"];
-    //   const durationValue = firstElement["duration"]["value"];
-    //   return res.json({distanceText:distanceText,durationText:durationText});
-    //
-    // } else{
-    //   return res.json({distanceText:"REQUEST STATUS NOT OK",durationText:"REQUEST STATUS NOT OK"});
-    // }
+      return res.json({distanceText:distanceText,durationText:durationText});
+
+    }
+    else{
+      return res.json({distanceText:"REQUEST STATUS NOT OK",durationText:"REQUEST STATUS NOT OK"});
+    }
 
   })
   .catch(err => "error@:"+err)
