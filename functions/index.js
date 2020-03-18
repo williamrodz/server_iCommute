@@ -12,17 +12,11 @@ admin.initializeApp({
   databaseURL: "https://icommute-firebase.firebaseio.com"
 });
 
-
 const DISTANCES_API_URL = 'https://maps.googleapis.com/maps/api/distancematrix/json?'
 
-
-// // Create and Deploy Your First Cloud Functions
-// // https://firebase.google.com/docs/functions/write-firebase-functions
-//
 exports.helloWorld = functions.https.onRequest((request, response) => {
  response.send("Hello from Firebase @_@");
 });
-
 
 
 function getDistance(from,to) {
@@ -71,6 +65,11 @@ function scheduleCommutes(){
     }
 
 
+exports.scheduledFunction = functions.pubsub.schedule('every 5 minutes').onRun((context) => {
+  console.log('This will be run every 5 minutes!');
+  return null;
+});
+
 
 exports.updateCommutes = functions.https.onRequest((request, response) => {
   console.log("Called updateCommutes latest");
@@ -105,34 +104,6 @@ exports.updateCommutes = functions.https.onRequest((request, response) => {
   .catch((error)=>console.log("error$"+error))
 });
 
-function checkStatus(response) {
-  if (response.ok) {
-    return Promise.resolve(response);
-  } else {
-    return Promise.reject(new Error(response.statusText));
-  }
-}
-
-function parseJSON(response) {
-  return response.json();
-}
-
-
-
-
-// fetch(urls[0])
-//   .then(response => response.json())
-//   .then(data =>{
-//      console.log("data\n"+data);
-//      return response.send(data);
-//   })
-//   .catch(error=>"error^: "+error)
-
-// })
-
-
-
-
 
 exports.getDistance = functions.https.onRequest((req, res) => {
   const from = req.query.from;
@@ -140,9 +111,7 @@ exports.getDistance = functions.https.onRequest((req, res) => {
 
   var requestUrl = DISTANCES_API_URL;
 
-
   requestUrl+=`key=${apiKeys.googleplaces}&origins=${from}&destinations=${to}`
-
 
   fetch(requestUrl)
   .then(response => response.json())
@@ -165,21 +134,3 @@ exports.getDistance = functions.https.onRequest((req, res) => {
   })
   .catch(err => "error@:"+err)
 });
-
-
-
-//   return request(requestUrl, function (error, response, body) {
-//     object = JSON.parse(body);
-//     const firstElement = object["rows"][0]["elements"][0];
-//     if (firstElement["status"] === "OK"){
-//       const distanceText = firstElement["distance"]["text"];
-//       const distanceValue = firstElement["distance"]["value"];
-//       const durationText = firstElement["duration"]["text"];
-//       const durationValue = firstElement["duration"]["value"]
-//       return res.json({distanceText:distanceText,durationText:durationText});
-//
-//     } else{
-//       return res.json({distanceText:"REQUEST STATUS NOT OK",durationText:"REQUEST STATUS NOT OK"});
-//     }
-//   });
-// });
