@@ -76,14 +76,59 @@ exports.updateCommutes = functions.https.onRequest((request, response) => {
   console.log("Called updateCommutes latest");
   const ref = admin.database().ref('/users/test_user/commutes');
 
-  ref.once('value').then((snapshot)=>{
-    return response.send(snapshot);
-  })
-  .catch((error)=>{
-    return response.send("error@: "+error)
-  })
+  return ref.once('value').then((snapshot)=>{
+    const snapshotValue = snapshot.val();
+    const timestamps = Object.keys(snapshotValue);
 
+    var urls = [];
+
+    for (var i = 0; i < timestamps.length; i++) {
+      var timestamp = timestamps[i];
+      var from = snapshotValue[timestamp].from;
+      var to = snapshotValue[timestamp].to;
+      var url = `http://localhost:5001/icommute-firebase/us-central1/getDistance?from=${from}&to=${to}`;
+      urls.push(fetch(url));
+    }
+
+    return Promise.all(urls)
+    .then((responses)=>{
+      return Promise.all(responses.map((res)=>res.json()));
+    })
+    .then((data)=>{
+      console.log("ALLLL");
+      console.log(data);
+      return response.send(data);
+    })
+
+
+  })
+  .catch((error)=>console.log("error$"+error))
 });
+
+function checkStatus(response) {
+  if (response.ok) {
+    return Promise.resolve(response);
+  } else {
+    return Promise.reject(new Error(response.statusText));
+  }
+}
+
+function parseJSON(response) {
+  return response.json();
+}
+
+
+
+
+// fetch(urls[0])
+//   .then(response => response.json())
+//   .then(data =>{
+//      console.log("data\n"+data);
+//      return response.send(data);
+//   })
+//   .catch(error=>"error^: "+error)
+
+// })
 
 
 

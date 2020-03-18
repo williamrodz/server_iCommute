@@ -67,3 +67,4 @@ node_modules/
 # williamrodz added
 apiKeys.json
 icommute-firebase-firebase-adminsdk-g9u8z-a0323162ae.json
+.DS_Store
