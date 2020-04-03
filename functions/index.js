@@ -5,7 +5,7 @@ const apiKeys = require('./apiKeys.json');
 const fetch = require('node-fetch');
 
 var admin = require("firebase-admin");
-var serviceAccount = require("./icommute-firebase-firebase-adminsdk-g9u8z-a0323162ae.json");
+var serviceAccount = require("./icommute-firebase-firebase-adminsdk.json");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -22,7 +22,6 @@ exports.helloWorld = functions.https.onRequest((request, response) => {
 function getDistance(from,to) {
   var requestUrl = DISTANCES_API_URL;
   requestUrl+=`key=${apiKeys.googleplaces}&origins=${from}&destinations=${to}`
-
   return request(requestUrl, function (error, response, body) {
     object = JSON.parse(body);
     const firstElement = object["rows"][0]["elements"][0];
@@ -65,10 +64,10 @@ function scheduleCommutes(){
     }
 
 
-exports.scheduledFunction = functions.pubsub.schedule('every 5 minutes').onRun((context) => {
-  console.log('This will be run every 5 minutes!');
-  return null;
-});
+// exports.scheduledFunction = functions.pubsub.schedule('every 5 minutes').onRun((context) => {
+//   console.log('This will be run every 5 minutes!');
+//   return null;
+// });
 
 
 exports.updateCommutes = functions.https.onRequest((request, response) => {
@@ -112,12 +111,13 @@ exports.getDistance = functions.https.onRequest((req, res) => {
   var requestUrl = DISTANCES_API_URL;
 
   requestUrl+=`key=${apiKeys.googleplaces}&origins=${from}&destinations=${to}`
+  console.log(`Running request: ${requestUrl}`);
 
   fetch(requestUrl)
   .then(response => response.json())
   .then(data => {
     const status = data.status
-    if (status == "OK"){
+    if (status === "OK"){
       const rows = data.rows;
       const elements = rows[0].elements;
       const firstElement = elements[0];

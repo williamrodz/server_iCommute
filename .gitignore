@@ -65,6 +65,6 @@ node_modules/
 .env
 
 # williamrodz added
-apiKeys.json
-icommute-firebase-firebase-adminsdk-g9u8z-a0323162ae.json
+functions/apiKeys.json
+functions/icommute-firebase-firebase-adminsdk.json
 .DS_Store
