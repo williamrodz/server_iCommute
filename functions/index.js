@@ -12,11 +12,74 @@ admin.initializeApp({
   databaseURL: "https://icommute-firebase.firebaseio.com"
 });
 
+
+
+/**
+Commutes are stored in following way
+
+users -> userID -> commutes -> commuteReference
+
+masterCommutes-> commuteRefence -> commuteMetadata
+
+commutesByTime -> hour -> minute -> commuteRefence
+
+
+
+**/
+
 const DISTANCES_API_URL = 'https://maps.googleapis.com/maps/api/distancematrix/json?'
 
 exports.helloWorld = functions.https.onRequest((request, response) => {
  response.send("Hello from Firebase @_@");
 });
+
+exports.addNewCommute = functions.https.onRequest((request, response) => {
+  const userID = request.query.userID
+  const from = request.query.from
+  const to = request.query.to
+  const hour = request.query.hour
+  const minute = request.query.minute
+
+  const masterCommutesRef = admin.database().ref(`/masterCommutes`);
+  const newCommuteRef = masterCommutesRef.push();
+  const pathString = newCommuteRef.toString()
+  const timestamp = pathString.substring(pathString.lastIndexOf("/")+1)
+
+
+  console.log(`timestamp: ${timestamp}`)
+
+  var masterRefUpdate = newCommuteRef.set({
+    userID:userID,
+    from:from,
+    to:to,
+    hour:hour,
+    minute:minute
+  })
+
+  const usersDBRef = admin.database().ref(`/users/${userID}/commutes/${timestamp}`);
+  var userDBUpdate = usersDBRef.set({
+    dummyVal:true
+  })
+
+  const orderedDBRef = admin.database().ref(`/scheduled/${hour}/${minute}/${timestamp}`);
+  var orderedDBUpdate = orderedDBRef.set({
+    dummyVal:true
+  })
+
+  Promise.all([masterRefUpdate,userDBUpdate,orderedDBUpdate])
+  .then(()=>{
+    return response.json({"STATUS":"OK",
+        userID:userID,
+        from:from,
+        to:to,
+        hour:hour,
+        minute:minute})
+  })
+  . catch(error=>response.json({"STATUS":"FAILED","Error":error}))
+});
+
+
+
 
 
 function getDistance(from,to) {
